@@ -20,7 +20,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
                 SortProperty = IssueSort.Updated, 
                 SortDirection = SortDirection.Descending, 
                 Since = lastScan)
-        filter.Labels.Add "api-approved"
+        filter.Labels.Add "api-ready-for-review"
         filter
         
     let client = GitHubClient(ProductHeaderValue("Issueneter"))
