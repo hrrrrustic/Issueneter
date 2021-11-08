@@ -1,5 +1,6 @@
 module Issueneter.WebAPI
 
+open FSharp.Configuration
 open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
@@ -8,18 +9,10 @@ open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open TelegramBot
 open RepoScanner
-open FSharp.Control.Tasks
-open Microsoft.AspNetCore.Http
-
-let hande next (ctx : HttpContext) = task {
-    let bot = ctx.GetService<IssueneterTelegramBot>()
-    return! json "ok" next ctx
-}
 
 let webApp =
     choose [
-        route "/ping"   >=> GET >=> hande
-        route "/"       >=> htmlFile "/pages/index.html" ]
+        route "/ping"   >=> GET >=> json "ok" ]
 
 let configureApp (app : IApplicationBuilder) =
     // Add Giraffe to the ASP.NET Core pipeline

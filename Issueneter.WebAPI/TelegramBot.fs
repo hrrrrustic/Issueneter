@@ -1,12 +1,13 @@
 ﻿namespace Issueneter
 
+open FSharp.Configuration
+open Microsoft.Extensions.Configuration
 open Telegram.Bot
 open Telegram.Bot.Types
 
-
 module TelegramBot =
 
-    type IssueneterTelegramBot() =
-        let tgClient = TelegramBotClient("2086755576:AAHEVSgycR0YQyCIdJ2-WDU-7cu96QoDm2Q")
-        let chatId = ChatId("336389404")
+    type IssueneterTelegramBot(config : IConfiguration) =
+        let tgClient = TelegramBotClient(config.GetSection("Token").Value)
+        let chatId = ChatId("412750554")
         member _.sendIssue text = tgClient.SendTextMessageAsync(chatId, text)
