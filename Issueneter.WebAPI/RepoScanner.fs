@@ -4,6 +4,7 @@ open Microsoft.Extensions.Hosting
 open System.Threading.Tasks
 open System
 open Octokit
+open FSharp.Control.Tasks
 open Issueneter.TelegramBot
 
 type Scanner(telegram: IssueneterTelegramBot) =
@@ -22,22 +23,20 @@ type Scanner(telegram: IssueneterTelegramBot) =
 
     let client = GitHubClient(ProductHeaderValue("Issueneter"))
 
-    let getIssues() = client.Issue.GetAllForRepository("kysect", "Issueneter", getApprovedFilter()) |> Async.AwaitTask
-    let getIssueComments (issue : Issue) =
-            client.Issue.Comment.GetAllForIssue("kysect", "Issueneter", issue.Id, IssueCommentRequest(
-                    Since = lastScan
-                )) |> Async.AwaitTask
-    let rec proceedIssues (issues : Issue list) = async {
+    let getIssues() = client.Issue.GetAllForRepository("kysect", "Issueneter", getApprovedFilter())
+    let getIssueComments (issue : Issue) = 
+            client.Issue.Comment.GetAllForIssue("kysect", "Issueneter", issue.Id, IssueCommentRequest(Since = lastScan))
+    let rec proceedIssues (issues : Issue list) = task {
         let getIssueLink (issue: Issue) =
             issue.HtmlUrl.ToString()
         
         let isLabelChangeComment (comment : IssueComment) =
             true
-        let needToSendIssue (issue : Issue) = async {
+        let needToSendIssue (issue : Issue) = task {
                 let! comments = getIssueComments issue
                 return comments |> List.ofSeq |> Seq.exists isLabelChangeComment
             }
-        let proceedIssue (issue: Issue) = async {
+        let proceedIssue (issue: Issue) = task {
             match! needToSendIssue issue with
             | true -> getIssueLink issue |> telegram.sendIssue |> ignore
             | _ -> ()
@@ -50,7 +49,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
         | _ -> ()
     }
 
-    let job = async {
+    let job = task {
         while true do
             let! response = getIssues()
             let issues = List.ofSeq response
@@ -61,7 +60,6 @@ type Scanner(telegram: IssueneterTelegramBot) =
 
     override _.ExecuteAsync ctx = 
         job 
-        |> Async.StartAsTask 
         |> ignore
         Task.CompletedTask
 
