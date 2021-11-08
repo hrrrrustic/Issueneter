@@ -3,9 +3,11 @@
 open Microsoft.Extensions.Hosting
 open System.Threading.Tasks
 open System
+open System.Threading
 open Octokit
 open FSharp.Control.Tasks
 open Issueneter.TelegramBot
+open CustomOperators
 
 type Scanner(telegram: IssueneterTelegramBot) =
     inherit BackgroundService()
@@ -24,17 +26,17 @@ type Scanner(telegram: IssueneterTelegramBot) =
     let client = GitHubClient(ProductHeaderValue("Issueneter"))
 
     let getIssues() = client.Issue.GetAllForRepository("kysect", "Issueneter", getApprovedFilter())
-    let getIssueComments (issue : Issue) = 
-            client.Issue.Comment.GetAllForIssue("kysect", "Issueneter", issue.Id, IssueCommentRequest(Since = lastScan))
+    let getIssueEvents (issue : Issue) = 
+            client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
     let rec proceedIssues (issues : Issue list) = task {
         let getIssueLink (issue: Issue) =
             issue.HtmlUrl.ToString()
         
-        let isLabelChangeComment (comment : IssueComment) =
-            true
         let needToSendIssue (issue : Issue) = task {
-                let! comments = getIssueComments issue
-                return comments |> List.ofSeq |> Seq.exists isLabelChangeComment
+                let! events = getIssueEvents issue
+                return events
+                    |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
+                    |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
             }
         let proceedIssue (issue: Issue) = task {
             match! needToSendIssue issue with
@@ -49,13 +51,14 @@ type Scanner(telegram: IssueneterTelegramBot) =
         | _ -> ()
     }
 
-    let job = task {
-        while true do
+    let job (ctx : CancellationToken) = task {
+        while not ctx.IsCancellationRequested do
             let! response = getIssues()
+            let scanTime = DateTimeOffset.UtcNow
             let issues = List.ofSeq response
-            lastScan <- DateTimeOffset.UtcNow
             do! proceedIssues issues
-            do! Task.Delay(20000) |> Async.AwaitTask
+            lastScan <- scanTime
+            do! Task.Delay(20000)
     }
 
     override _.ExecuteAsync ctx = 

@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Operators.fs" />
         <Compile Include="TelegramBot.fs" />
         <Compile Include="RepoScanner.fs" />
         <Compile Include="Program.fs" />
