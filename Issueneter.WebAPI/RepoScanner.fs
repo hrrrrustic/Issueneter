@@ -22,7 +22,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
                 Since = lastScan)
         filter.Labels.Add "api-approved"
         filter
-
+        
     let client = GitHubClient(ProductHeaderValue("Issueneter"))
 
     let getIssues() = client.Issue.GetAllForRepository("kysect", "Issueneter", getApprovedFilter())
@@ -30,7 +30,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
             client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
     let rec proceedIssues (issues : Issue list) = task {
         let getIssueLink (issue: Issue) =
-            issue.HtmlUrl.ToString()
+            $"[изи]({issue.HtmlUrl})"
         
         let needToSendIssue (issue : Issue) = task {
                 let! events = getIssueEvents issue
@@ -62,7 +62,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
     }
 
     override _.ExecuteAsync ctx = 
-        job 
+        job ctx 
         |> ignore
         Task.CompletedTask
 
