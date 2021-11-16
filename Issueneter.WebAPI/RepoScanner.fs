@@ -6,29 +6,25 @@ open System
 open System.Threading
 open Octokit
 open FSharp.Control.Tasks
+open FSharp.Control
 open Issueneter.TelegramBot
-open CustomOperators
+open Filtering
 
 type Scanner(telegram: IssueneterTelegramBot) =
     inherit BackgroundService()
     let mutable lastScan = DateTimeOffset.UtcNow
-    let getApprovedFilter() = 
-        let filter = 
-            RepositoryIssueRequest(
-                Filter = IssueFilter.All, 
-                State = ItemStateFilter.Open, 
-                SortProperty = IssueSort.Updated, 
-                SortDirection = SortDirection.Descending, 
-                Since = lastScan)
-        filter.Labels.Add "api-ready-for-review"
-        filter
-        
     let client = GitHubClient(ProductHeaderValue("Issueneter"))
 
-    let getIssues() = client.Issue.GetAllForRepository("kysect", "Issueneter", getApprovedFilter())
+    let getIssues (filter: RepositoryIssueRequest) = client.Issue.GetAllForRepository("kysect", "Issueneter", filter)
+
+    let getAllIssues filters =
+        filters
+        |> Seq.map ^ fun x -> getIssues x
+        |> Task.WhenAll
+
     let getIssueEvents (issue : Issue) = 
             client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
-    let rec proceedIssues (issues : Issue list) = task {
+    let rec proceedIssues (issues : Issue list) = unitTask {
         let getIssueLink (issue: Issue) =
             $"[изи]({issue.HtmlUrl})"
         
@@ -40,7 +36,7 @@ type Scanner(telegram: IssueneterTelegramBot) =
             }
         let proceedIssue (issue: Issue) = task {
             match! needToSendIssue issue with
-            | true -> getIssueLink issue |> telegram.sendIssue |> ignore
+            | true -> do! getIssueLink issue |> telegram.sendIssue
             | _ -> ()
         }
 
@@ -53,17 +49,19 @@ type Scanner(telegram: IssueneterTelegramBot) =
 
     let job (ctx : CancellationToken) = task {
         while not ctx.IsCancellationRequested do
-            let! response = getIssues()
+            let! response = getFilters lastScan
+                            |> getAllIssues
+
             let scanTime = DateTimeOffset.UtcNow
-            let issues = List.ofSeq response
-            do! proceedIssues issues
+            let proceedIssues = response
+                                |> Array.map ^ fun x -> proceedIssues <| List.ofSeq x
+                                |> Task.WhenAll
+            do! proceedIssues
             lastScan <- scanTime
-            do! Task.Delay(20000)
+            do! Task.Delay(TimeSpan.FromSeconds ^ float 20)
     }
 
     override _.ExecuteAsync ctx = 
         job ctx 
         |> ignore
-        Task.CompletedTask
-
-            
+        Task.CompletedTask        
