@@ -24,27 +24,22 @@ type Scanner(telegram: IssueneterTelegramBot) =
 
     let getIssueEvents (issue : Issue) = 
             client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
-    let rec proceedIssues (issues : Issue list) = unitTask {
-        let getIssueLink (issue: Issue) =
-            $"[изи]({issue.HtmlUrl})"
-        
-        let needToSendIssue (issue : Issue) = task {
-                let! events = getIssueEvents issue
-                return events
-                    |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
-                    |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
-            }
-        let proceedIssue (issue: Issue) = task {
-            match! needToSendIssue issue with
-            | true -> do! getIssueLink issue |> telegram.sendIssue
-            | _ -> ()
+
+    let needToSendIssue (issue : Issue) = task {
+        let! events = getIssueEvents issue
+        return events
+            |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
+            |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
+    }
+
+    let proceedIssues (issues : Issue list) = unitTask {
+        let sendInterestingIssues issues = task {
+            for issue in issues do
+                do! telegram.sendIssue issue
         }
 
-        match issues with
-        | head :: other ->
-            do! proceedIssue head
-            do! proceedIssues other
-        | _ -> ()
+        let! interestingIssues = Filtering.getUpdatedByLabelingIssues issues needToSendIssue
+        do! sendInterestingIssues interestingIssues
     }
 
     let job (ctx : CancellationToken) = task {
@@ -53,10 +48,10 @@ type Scanner(telegram: IssueneterTelegramBot) =
                             |> getAllIssues
 
             let scanTime = DateTimeOffset.UtcNow
-            let proceedIssues = response
-                                |> Array.map ^ fun x -> proceedIssues <| List.ofSeq x
-                                |> Task.WhenAll
-            do! proceedIssues
+            do! response
+                |> Array.map ^ fun x -> proceedIssues <| List.ofSeq x
+                |> Task.WhenAll
+
             lastScan <- scanTime
             do! Task.Delay(TimeSpan.FromSeconds ^ float 20)
     }
