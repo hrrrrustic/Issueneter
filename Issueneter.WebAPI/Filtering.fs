@@ -1,4 +1,4 @@
-﻿module Filtering
+module Filtering
     open Octokit
     open IssueLabels
     open System
@@ -31,7 +31,7 @@
         |]
     let getFilters (since : DateTimeOffset) =
         filters |>
-        Array.map ^ fun x -> x
+        Array.map ^ fun x -> x.Since <- since; x
     
     let rec getUpdatedByLabelingIssues (issues : Issue list) (filter: Issue -> Task<bool>) = task {
         match issues with

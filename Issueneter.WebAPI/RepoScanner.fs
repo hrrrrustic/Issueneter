@@ -18,7 +18,7 @@ type ScannerConfiguration = {
 
 type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguration, logger: ILogger<Scanner>) =
     inherit BackgroundService()
-    let mutable lastScan = DateTimeOffset.UtcNow.AddDays(float -10)
+    let mutable lastScan = DateTimeOffset.UtcNow
     let credentionals = Credentials("_", "_")
     let client = 
         let value = GitHubClient(ProductHeaderValue("Issueneter"))
@@ -39,6 +39,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
         }
 
         let! interestingIssues = getUpdatedByLabelingIssues issues needToSendIssue
+        logger.LogInformation($"Remaining calls after filtering {issues.Length} issues: {client.GetLastApiInfo().RateLimit.Remaining}")
         do! sendInterestingIssues interestingIssues
     }
 
@@ -47,7 +48,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             try
                 let! response = getFilters lastScan
                                 |> getAllIssues client
-            
+                logger.LogInformation($"Remaining calls after getting issues: {client.GetLastApiInfo().RateLimit.Remaining}")
                 let log = response |> Seq.fold (fun x y -> x + y.Count.ToString() + " ") "";
                 logger.LogInformation $"Found {log}"
                 let scanTime = DateTimeOffset.UtcNow
@@ -58,7 +59,14 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
                 lastScan <- scanTime
                 do! Task.Delay(configuration.ScannerTimeOut)
             with
-            | e -> logger.LogError <| e.ToString()
+            | :? RateLimitExceededException as ex -> 
+                logger.LogError $"Rate limit reached"
+                let diff = DateTimeOffset.UtcNow - ex.Reset
+                if diff > 0 then
+                    logger.LogInformation $"Go to sleep until rate reset: {ex.Reset}"
+                    do! Task.Delay(diff)
+                    logger.LogInformation "Wake up after sleep"
+                
     }
 
     override _.ExecuteAsync ctx =
