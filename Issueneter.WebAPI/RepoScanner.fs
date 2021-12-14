@@ -61,8 +61,8 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             with
             | :? RateLimitExceededException as ex -> 
                 logger.LogError $"Rate limit reached"
-                let diff = DateTimeOffset.UtcNow - ex.Reset
-                if diff > 0 then
+                let diff = ex.Reset - DateTimeOffset.UtcNow
+                if diff > TimeSpan.Zero then
                     logger.LogInformation $"Go to sleep until rate reset: {ex.Reset}"
                     do! Task.Delay(diff)
                     logger.LogInformation "Wake up after sleep"
