@@ -18,11 +18,16 @@ type ScannerConfiguration = {
 
 type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguration, logger: ILogger<Scanner>) =
     inherit BackgroundService()
-    let mutable lastScan = DateTimeOffset.UtcNow
-    let client = GitHubClient(ProductHeaderValue("Issueneter"))
+    let mutable lastScan = DateTimeOffset.UtcNow.AddDays(float -10)
+    let credentionals = Credentials("_", "_")
+    let client = 
+        let value = GitHubClient(ProductHeaderValue("Issueneter"))
+        value.Credentials <- credentionals
+        value
 
     let needToSendIssue (issue : Issue) = task {
         let! events = getIssueEvents client issue
+        printfn $"{lastScan}"
         return events
             |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
             |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
@@ -54,7 +59,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             do! Task.Delay(configuration.ScannerTimeOut)
     }
 
-    override _.ExecuteAsync ctx = 
+    override _.ExecuteAsync ctx =
         job ctx 
         |> ignore
         Task.CompletedTask

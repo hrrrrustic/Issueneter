@@ -19,6 +19,7 @@
                         State = ItemStateFilter.Open, 
                         SortProperty = IssueSort.Updated, 
                         SortDirection = SortDirection.Descending)
+        filter.Labels.Add <| toString label
         filter
 
     let private filters = 
@@ -30,7 +31,7 @@
         |]
     let getFilters (since : DateTimeOffset) =
         filters |>
-        Array.map ^ fun x -> x.Since <- since; x
+        Array.map ^ fun x -> x
     
     let rec getUpdatedByLabelingIssues (issues : Issue list) (filter: Issue -> Task<bool>) = task {
         match issues with
