@@ -1,4 +1,4 @@
-﻿module RepoScanner
+module RepoScanner
 
 open Microsoft.Extensions.Hosting
 open System.Threading.Tasks
@@ -27,7 +27,6 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
 
     let needToSendIssue (issue : Issue) = task {
         let! events = getIssueEvents client issue
-        printfn $"{lastScan}"
         return events
             |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
             |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
@@ -45,18 +44,21 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
 
     let job (ctx : CancellationToken) = task {
         while not ctx.IsCancellationRequested do
-            let! response = getFilters lastScan
-                            |> getAllIssues client
+            try
+                let! response = getFilters lastScan
+                                |> getAllIssues client
             
-            let log = response |> Seq.fold (fun x y -> x + y.Count.ToString() + " ") "";
-            logger.LogInformation $"Found {log}"
-            let scanTime = DateTimeOffset.UtcNow
-            do! response
-                |> Array.map ^ fun x -> proceedIssues <| List.ofSeq x
-                |> Task.WhenAll
+                let log = response |> Seq.fold (fun x y -> x + y.Count.ToString() + " ") "";
+                logger.LogInformation $"Found {log}"
+                let scanTime = DateTimeOffset.UtcNow
+                do! response
+                    |> Array.map ^ fun x -> proceedIssues <| List.ofSeq x
+                    |> Task.WhenAll
 
-            lastScan <- scanTime
-            do! Task.Delay(configuration.ScannerTimeOut)
+                lastScan <- scanTime
+                do! Task.Delay(configuration.ScannerTimeOut)
+            with
+            | e -> logger.LogError <| e.ToString()
     }
 
     override _.ExecuteAsync ctx =
