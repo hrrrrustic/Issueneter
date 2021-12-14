@@ -5,13 +5,20 @@
     open FSharp.Control.Tasks
     open System.Threading.Tasks
 
+
+    let inline toString label =
+        match label with
+        | ApiReadyForReview -> "api-ready-for-review"
+        | ApiApproved -> "api-approved"
+        | UpForGrabs -> "up-for-grabs"
+        | Easy -> "easy"
+
     let defaultFilterWithLabel (label: EasyIssueLabel) =
         let filter = RepositoryIssueRequest(
                         Filter = IssueFilter.All, 
                         State = ItemStateFilter.Open, 
                         SortProperty = IssueSort.Updated, 
                         SortDirection = SortDirection.Descending)
-        filter.Labels.Add <| label.ToString()
         filter
 
     let private filters = 
