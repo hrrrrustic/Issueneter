@@ -20,7 +20,7 @@ module Filtering
                         SortProperty = IssueSort.Updated, 
                         SortDirection = SortDirection.Descending)
         filter.Labels.Add <| toString label
-        filter
+        {BaseFilter = filter; Label = label}
 
     let private filters = 
         [|
@@ -31,9 +31,9 @@ module Filtering
         |]
     let getFilters (since : DateTimeOffset) =
         filters |>
-        Array.map ^ fun x -> x.Since <- since; x
+        Array.map ^ fun x -> x.BaseFilter.Since <- since; x
     
-    let rec getUpdatedByLabelingIssues (issues : Issue list) (filter: Issue -> Task<bool>) = task {
+    let rec getUpdatedByLabelingIssues (issues : Issue list) (filter: FoundIssue -> Task<bool>) = task {
         match issues with
         | [] -> return []
         | issue::other -> 

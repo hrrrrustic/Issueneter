@@ -10,6 +10,7 @@ open FSharp.Control
 open Issueneter.TelegramBot
 open Filtering
 open Github
+open IssueLabels
 open Microsoft.Extensions.Logging
 
 type ScannerConfiguration = {
@@ -19,17 +20,17 @@ type ScannerConfiguration = {
 type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguration, logger: ILogger<Scanner>) =
     inherit BackgroundService()
     let mutable lastScan = DateTimeOffset.UtcNow
-    let credentionals = Credentials("_", "_")
+    let credentionals = Credentials("hrrrrustic", "lolilop67")
     let client = 
         let value = GitHubClient(ProductHeaderValue("Issueneter"))
         value.Credentials <- credentionals
         value
 
-    let needToSendIssue (issue : Issue) = task {
-        let! events = getIssueEvents client issue
+    let needToSendIssue (foundResult: FoundIssue) = task {
+        let! events = getIssueEvents client foundResult.Issue
         return events
             |> Seq.sortByDescending ^ fun (x: TimelineEventInfo) -> x.CreatedAt
-            |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.CreatedAt > lastScan
+            |> Seq.exists ^ fun x -> x.Event.Value = EventInfoState.Labeled && x.Label.Name = toString foundResult.SearchLabel && x.CreatedAt > lastScan
     }
 
     let proceedIssues (issues : Issue list) = unitTask {
@@ -48,7 +49,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             try
                 let! response = getFilters lastScan
                                 |> getAllIssues client
-                logger.LogInformation($"Remaining calls after getting issues: {client.GetLastApiInfo().RateLimit.Remaining}")
+                logger.LogInformation($"Remaining calls after getting issues: {client.GetLastApiInfo().RateLimit.Remaining} until {client.GetLastApiInfo().RateLimit.Reset}")
                 let log = response |> Seq.fold (fun x y -> x + y.Count.ToString() + " ") "";
                 logger.LogInformation $"Found {log}"
                 let scanTime = DateTimeOffset.UtcNow
