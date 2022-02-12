@@ -26,8 +26,6 @@
             |> Seq.map (fun req -> client.Issue.GetAllForRepository("kysect", "Issueneter", req))
             |> Task.WhenAll
         let issues = issuesArray |> Seq.concat |> Seq.distinctBy (fun i -> i.Id)
-        printfn $"Since - {filterConfiguration.since}"
-        printfn $"Issues from github - {Seq.length issues}"
         return issues
     }
 
