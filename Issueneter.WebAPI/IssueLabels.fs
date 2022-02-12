@@ -1,18 +1,15 @@
 ﻿module IssueLabels
-    open Octokit
-
-    type EasyIssueLabel =
+    type IssueLabel =
     | ApiApproved
     | ApiReadyForReview
     | UpForGrabs
     | Easy
+    | InPr
 
-    type FoundIssue = {
-        Issue: Issue
-        SearchLabel: EasyIssueLabel
-    }
-
-    type SearchFilter = {
-        BaseFilter: RepositoryIssueRequest
-        Label: EasyIssueLabel
-    }
+    module IssueLabel =
+        let toString label = match label with
+            | ApiApproved -> "api-approved"
+            | ApiReadyForReview -> "api-ready-for-review"
+            | UpForGrabs -> "up-for-grabs"
+            | Easy -> "easy"
+            | InPr -> "in-pr"

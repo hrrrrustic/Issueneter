@@ -1,46 +1,44 @@
 module Filtering
-    open Octokit
-    open IssueLabels
     open System
-    open FSharp.Control.Tasks
-    open System.Threading.Tasks
+    open IssueLabels
+    open Octokit
+
+    type Filter =
+        | GithubIssueLabelFilter of IssueLabel
+        | LocalIssueIgnoreLabelFilter of IssueLabel
+
+    module Filter =
+        let getLabelsForGithub (filter : Filter) : (IssueLabel Option) =
+            match filter with
+            | GithubIssueLabelFilter gf -> Some gf
+            | LocalIssueIgnoreLabelFilter _ -> None
+
+        let getLabelsForLocalIgnore (filter : Filter) : (IssueLabel Option) =
+            match filter with
+            | GithubIssueLabelFilter _ -> None
+            | LocalIssueIgnoreLabelFilter i -> Some i
+
+        let checkIgnoreFilters (filters : seq<Filter>) (issue : Issue) : bool =
+            let ignoreLabels = filters |> Seq.map getLabelsForLocalIgnore |> Seq.choose id |> Seq.map IssueLabel.toString
+            issue.Labels |> Seq.exists (fun l -> ignoreLabels |> Seq.contains l.Name) |> not
 
 
-    let inline toString label =
-        match label with
-        | ApiReadyForReview -> "api-ready-for-review"
-        | ApiApproved -> "api-approved"
-        | UpForGrabs -> "up-for-grabs"
-        | Easy -> "easy"
-
-    let defaultFilterWithLabel (label: EasyIssueLabel) =
-        let filter = RepositoryIssueRequest(
-                        Filter = IssueFilter.All, 
-                        State = ItemStateFilter.Open, 
-                        SortProperty = IssueSort.Updated, 
-                        SortDirection = SortDirection.Descending)
-        filter.Labels.Add <| toString label
-        {BaseFilter = filter; Label = label}
-
-    let private filters = 
-        [|
-            defaultFilterWithLabel ApiReadyForReview
-            defaultFilterWithLabel UpForGrabs
-            defaultFilterWithLabel Easy
-            defaultFilterWithLabel ApiApproved
-        |]
-    let getFilters (since : DateTimeOffset) =
-        filters |>
-        Array.map ^ fun x -> x.BaseFilter.Since <- since; x
-    
-    let rec getUpdatedByLabelingIssues (issues : Issue list) (filter: FoundIssue -> Task<bool>) = task {
-        match issues with
-        | [] -> return []
-        | issue::other -> 
-            let! valid = filter issue
-            let! others = getUpdatedByLabelingIssues other filter
-
-            return match valid with
-                    | true -> issue::others
-                    | false -> others
+    type FilterConfiguration = {
+        since : DateTimeOffset
+        filters : seq<Filter>
     }
+
+    let getDefaultFilters =
+        [|
+            GithubIssueLabelFilter ApiReadyForReview
+            GithubIssueLabelFilter UpForGrabs
+            GithubIssueLabelFilter Easy
+            GithubIssueLabelFilter ApiApproved
+            LocalIssueIgnoreLabelFilter InPr
+        |]
+
+    let getDefaultFilterConfiguration (since: DateTimeOffset) =
+            {
+                since = since
+                filters = getDefaultFilters
+            }

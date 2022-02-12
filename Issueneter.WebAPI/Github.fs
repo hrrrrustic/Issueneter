@@ -1,37 +1,40 @@
 ﻿module Github
-    open Octokit
+    open System
     open System.Threading.Tasks
+    open Filtering
+    open Octokit
     open FSharp.Control.Tasks
-    open System.Collections.Generic
     open IssueLabels
 
-    type SearchedIssues = {
-        Issues: IReadOnlyList<Issue>
-        SearchLabel: EasyIssueLabel
-    }
+    let createRepositoryRequest (since : DateTimeOffset) (label : string) =
+        let request = RepositoryIssueRequest(
+                        Filter = IssueFilter.All,
+                        State = ItemStateFilter.Open,
+                        SortProperty = IssueSort.Updated,
+                        SortDirection = SortDirection.Descending,
+                        Since = since)
+        request.Labels.Add label
+        request
 
-    let private getIssues (client: GitHubClient) (filter: SearchFilter) = task {
-        let! issues = client.Issue.GetAllForRepository("dotnet", "runtime", filter.BaseFilter)
-        return filter.Label, issues
-    }
-
-    let getIssueEvents (client: GitHubClient) (issue : Issue) = client.Issue.Timeline.GetAllForIssue("dotnet", "runtime", issue.Number)
-
-    let getAllIssues (client: GitHubClient) (filters: seq<SearchFilter>) : Task<IDictionary<EasyIssueLabel, Issue array>> = task {
-        let! issues =
-            filters
-            |> Seq.map (fun x -> getIssues client x)
+    let requestIssues (client: GitHubClient) (filterConfiguration: FilterConfiguration) = task {
+        let! issuesArray =
+            filterConfiguration.filters
+            |> Seq.map Filter.getLabelsForGithub
+            |> Seq.choose id
+            |> Seq.map IssueLabel.toString
+            |> Seq.map (createRepositoryRequest filterConfiguration.since)
+            |> Seq.map (fun req -> client.Issue.GetAllForRepository("kysect", "Issueneter", req))
             |> Task.WhenAll
-
-        let set = Set<int>(issues |> Seq.collect ^ fun (x, y) -> y |> Seq.map ^ fun x -> x.Number)
-
-        let res = 
-            issues
-            |> Seq.map ^ fun (x, y) -> 
-                (x, y 
-                    |> Seq.filter ^ fun z -> Set.contains z.Number set 
-                    |> Array.ofSeq)
-            |> dict
-
-        return res
+        let issues = issuesArray |> Seq.concat |> Seq.distinctBy (fun i -> i.Id)
+        printfn $"Since - {filterConfiguration.since}"
+        printfn $"Issues from github - {Seq.length issues}"
+        return issues
     }
+
+    let private credentionals = Credentials("", "")
+    let client =
+        let value = GitHubClient(ProductHeaderValue("Issueneter"))
+        value.Credentials <- credentionals
+        value
+
+    let getIssues = requestIssues client

@@ -8,7 +8,6 @@
 
     <ItemGroup>
         <Compile Include="IssueLabels.fs" />
-        <Compile Include="Operators.fs" />
         <Compile Include="Filtering.fs" />
         <Compile Include="TelegramBot.fs" />
         <Compile Include="Github.fs" />
