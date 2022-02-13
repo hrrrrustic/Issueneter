@@ -34,7 +34,6 @@ module Filtering
             GithubIssueLabelFilter UpForGrabs
             GithubIssueLabelFilter Easy
             GithubIssueLabelFilter ApiApproved
-            LocalIssueIgnoreLabelFilter InPr
         |]
 
     let getDefaultFilterConfiguration (since: DateTimeOffset) =
