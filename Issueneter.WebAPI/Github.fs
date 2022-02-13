@@ -29,6 +29,9 @@
         return issues
     }
 
+    let requestIssueEvents (client: GitHubClient) (issue: Issue) =
+        client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
+
     let private credentionals = Credentials("", "")
     let client =
         let value = GitHubClient(ProductHeaderValue("Issueneter"))
@@ -36,3 +39,5 @@
         value
 
     let getIssues = requestIssues client
+
+    let getIssueEvents: Issue -> Task<Collections.Generic.IReadOnlyList<TimelineEventInfo>> = requestIssueEvents client

@@ -1,6 +1,7 @@
 module RepoScanner
 
 open System.Timers
+open IssueLabels
 open Microsoft.Extensions.Hosting
 open System.Threading.Tasks
 open System
@@ -19,6 +20,14 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
     inherit BackgroundService()
     let mutable lastScan = DateTimeOffset.UtcNow
 
+    let checkIssueEvents (filters: seq<Filter>) (issue: Issue)  = task {
+        let! issueEvents = getIssueEvents issue
+        let labels = filters |> Seq.map Filter.getLabelsForGithub |> Seq.choose id |> Seq.map IssueLabel.toString
+        return issueEvents
+        |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
+        |> Seq.exists (fun e -> labels |> Seq.contains e.Label.Name)
+    }
+
     let scanRepos ct =
         task {
             let filterConfiguration = getDefaultFilterConfiguration lastScan
@@ -27,7 +36,10 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             let issuesToSend = issues
                                |> Seq.where (Filter.checkIgnoreFilters filterConfiguration.filters)
             logger.LogInformation $"Found {Seq.length issuesToSend} interesting issues"
-            do! telegram.sendIssues issuesToSend
+            for issue in issuesToSend do
+                let! needToSend = checkIssueEvents filterConfiguration.filters issue
+                if needToSend then
+                    do! telegram.sendIssues issuesToSend
         }
 
     override _.ExecuteAsync ct =
