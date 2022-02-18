@@ -10,9 +10,9 @@ jobs:
 
   build:
 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
-      run: docker build . --file ./Issueneter.WebAPI/Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --platform linux/arm64 --file ./Issueneter.WebAPI/Dockerfile --tag hrrrrustic/issueneterwebapi:$(date +%s)
