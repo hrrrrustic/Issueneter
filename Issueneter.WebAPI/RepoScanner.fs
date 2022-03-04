@@ -23,6 +23,9 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
     let checkIssueEvents (filters: seq<Filter>) (issue: Issue)  = task {
         let! issueEvents = getIssueEvents issue
         let labels = filters |> Seq.map Filter.getLabelsForGithub |> Seq.choose id |> Seq.map IssueLabel.toString
+        issueEvents
+        |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
+        |> Seq.iter (fun x -> logger.LogInformation $"{x.Label.Name} - {x.CreatedAt}")
         return issueEvents
         |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
         |> Seq.exists (fun e -> labels |> Seq.contains e.Label.Name)
@@ -39,6 +42,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
             for issue in issuesToSend do
                 let! needToSend = checkIssueEvents filterConfiguration.filters issue
                 if needToSend then
+                    logger.LogInformation $"Sending issue {issue.Title}"
                     do! telegram.sendIssues issuesToSend
         }
 
@@ -50,6 +54,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
                     do! scanRepos ct
                     lastScan <- DateTimeOffset.UtcNow
                     logger.LogInformation $"End scanning at {lastScan}"
+                    logger.LogInformation $"Remaining calls {client.GetLastApiInfo().RateLimit.Remaining} until {client.GetLastApiInfo().RateLimit.Reset}"
                     do! Task.Delay configuration.ScannerTimeOut
                 with
                 | :? RateLimitExceededException as ex ->

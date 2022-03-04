@@ -23,16 +23,16 @@
             |> Seq.choose id
             |> Seq.map IssueLabel.toString
             |> Seq.map (createRepositoryRequest filterConfiguration.since)
-            |> Seq.map (fun req -> client.Issue.GetAllForRepository("kysect", "Issueneter", req))
+            |> Seq.map (fun req -> client.Issue.GetAllForRepository("hrrrrustic", "Issueneter", req))
             |> Task.WhenAll
         let issues = issuesArray |> Seq.concat |> Seq.distinctBy (fun i -> i.Id)
         return issues
     }
 
     let requestIssueEvents (client: GitHubClient) (issue: Issue) =
-        client.Issue.Timeline.GetAllForIssue("kysect", "Issueneter", issue.Number)
+        client.Issue.Timeline.GetAllForIssue("hrrrrustic", "Issueneter", issue.Number)
 
-    let private credentionals = Credentials("", "")
+    let private credentionals = Credentials("token")
     let client =
         let value = GitHubClient(ProductHeaderValue("Issueneter"))
         value.Credentials <- credentionals
