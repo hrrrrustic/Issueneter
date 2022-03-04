@@ -16,7 +16,7 @@ let configureServices (services : IServiceCollection) =
     services.AddLogging() |> ignore
     services.AddSingleton<IssueneterTelegramBot>() |> ignore
     services.AddHostedService<Scanner>() |> ignore
-    services.AddSingleton<ScannerConfiguration>({ScannerTimeOut = TimeSpan.FromSeconds(float 60)}) |> ignore
+    services.AddSingleton<ScannerConfiguration>({ScannerTimeOut = TimeSpan.FromMinutes(float 30)}) |> ignore
 
 [<EntryPoint>]
 let main _ =
