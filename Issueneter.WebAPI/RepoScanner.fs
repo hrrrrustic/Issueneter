@@ -25,7 +25,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
         let labels = filters |> Seq.map Filter.getLabelsForGithub |> Seq.choose id |> Seq.map IssueLabel.toString
         issueEvents
         |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
-        |> Seq.iter (fun x -> logger.LogInformation $"{x.Label.Name} - {x.CreatedAt}")
+        |> Seq.iter (fun x -> logger.LogInformation $"{x.Label.Name} - {x.CreatedAt} - {x.Event.StringValue}")
         return issueEvents
         |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
         |> Seq.exists (fun e -> labels |> Seq.contains e.Label.Name)
