@@ -7,7 +7,6 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 COPY ["./Issueneter.WebAPI/", "./Issueneter.WebAPI/src/"]
-RUN dotnet restore --no-restore "./Issueneter.WebAPI/src/Issueneter.WebAPI.fsproj"
 
 COPY . .
 WORKDIR "/src/Issueneter.WebAPI"
