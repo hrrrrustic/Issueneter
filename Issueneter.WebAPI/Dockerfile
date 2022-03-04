@@ -5,8 +5,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+
 COPY ["./Issueneter.WebAPI/", "./Issueneter.WebAPI/src/"]
 RUN dotnet restore "./Issueneter.WebAPI/src/Issueneter.WebAPI.fsproj"
+
 COPY . .
 WORKDIR "/src/Issueneter.WebAPI"
 RUN dotnet build "Issueneter.WebAPI.fsproj" -c Release -o /app/build
