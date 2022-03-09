@@ -1,0 +1,29 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Docker build & push
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+    
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: Docker build
+        run: |
+          docker build . -f ./Issueneter.WebAPI/Dockerfile -t hrrrrustic/issueneterwebapi
+      - name: Docker push
+        run: |
+          docker push hrrrrustic/issueneterwebapi
+        
