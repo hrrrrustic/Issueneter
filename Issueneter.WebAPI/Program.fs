@@ -1,22 +1,22 @@
+module Issueneter.WebAPI
+
 open System
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
-open Giraffe
+open TelegramBot
+open RepoScanner
 
-let webApp =
-    choose [
-        route "/ping"   >=> text "pong"
-        route "/"       >=> htmlFile "/pages/index.html" ]
 
 let configureApp (app : IApplicationBuilder) =
-    // Add Giraffe to the ASP.NET Core pipeline
-    app.UseGiraffe webApp
+    ()
 
 let configureServices (services : IServiceCollection) =
-    // Add Giraffe dependencies
-    services.AddGiraffe() |> ignore
+    services.AddLogging() |> ignore
+    services.AddSingleton<IssueneterTelegramBot>() |> ignore
+    services.AddHostedService<Scanner>() |> ignore
+    services.AddSingleton<ScannerConfiguration>({ScannerTimeOut = TimeSpan.FromMinutes(float 30)}) |> ignore
 
 [<EntryPoint>]
 let main _ =
