@@ -16,5 +16,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_HOST_PORT }}
           script: |
+            cd Issueneter
             cd Deployemnt
             kubectl apply -f deployment.yaml
