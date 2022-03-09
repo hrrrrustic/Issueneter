@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issueneter
+spec:
+  selector:
+    matchLabels:
+      app: issueneter
+  template:
+    metadata:
+      labels:
+        app: issueneter
+    spec:
+      containers:
+      - name: issueneter
+        image: hrrrrustic/issueneterwebapi
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
