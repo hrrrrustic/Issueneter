@@ -17,10 +17,7 @@ module TelegramBot =
         let getIssueLink (issue: Issue) =
             $"[изи]({issue.HtmlUrl})"
 
-        let sendIssue issue = tgClient.SendTextMessageAsync(chatId, getIssueLink issue, Enums.ParseMode.Markdown) :> Task
-
-        member _.sendIssues (issues : seq<Issue>) =
+        member _.sendIssue (issue : Issue) =
             task {
-                for issue in issues do
-                    do! sendIssue issue
+                do! tgClient.SendTextMessageAsync(chatId, getIssueLink issue, Enums.ParseMode.Markdown) :> Task
             }

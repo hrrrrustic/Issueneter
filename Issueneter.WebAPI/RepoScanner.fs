@@ -43,7 +43,7 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
                 let! needToSend = checkIssueEvents filterConfiguration.filters issue
                 if needToSend then
                     logger.LogInformation $"Sending issue {issue.Title}"
-                    do! telegram.sendIssues (seq {issue})
+                    do! telegram.sendIssue issue
         }
 
     override _.ExecuteAsync ct =
