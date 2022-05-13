@@ -20,7 +20,16 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
     inherit BackgroundService()
     let mutable lastScan = DateTimeOffset.UtcNow
 
-    let checkIssueEvents (filters: seq<Filter>) (issue: Issue)  = task {
+    let getEventString (event : TimelineEventInfo) =
+        match event.Label.Name with
+        | "easy" -> match event.Actor.Login with
+            | "EgorBo" -> "Легко (но от Егора)"
+            | _ -> $"Легко"
+        | "up-for-grabs" -> "Грабли"
+        | "api-approved" -> "Новое API"
+        | "api-ready-for-review" -> "API на ревью"
+    
+    let getRequiredIssueEvents (filters: seq<Filter>) (issue: Issue)  = task {
         let! issueEvents = getIssueEvents issue
         let labels = filters |> Seq.map Filter.getLabelsForGithub |> Seq.choose id |> Seq.map IssueLabel.toString
         issueEvents
@@ -28,7 +37,8 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
         |> Seq.iter (fun x -> logger.LogInformation $"{x.Label.Name} - {x.CreatedAt} - {x.Event.StringValue}")
         return issueEvents
         |> Seq.where (fun e -> e.Event.Value.Equals(EventInfoState.Labeled) && e.CreatedAt > lastScan)
-        |> Seq.exists (fun e -> labels |> Seq.contains e.Label.Name)
+        |> Seq.where (fun e -> labels |> Seq.contains e.Label.Name)
+        |> Seq.map getEventString
     }
 
     let scanRepos ct =
@@ -40,10 +50,10 @@ type Scanner(telegram: IssueneterTelegramBot, configuration: ScannerConfiguratio
                                |> Seq.where (Filter.checkIgnoreFilters filterConfiguration.filters)
             logger.LogInformation $"Found {Seq.length issuesToSend} interesting issues"
             for issue in issuesToSend do
-                let! needToSend = checkIssueEvents filterConfiguration.filters issue
-                if needToSend then
+                let! issueEvents = getRequiredIssueEvents filterConfiguration.filters issue
+                if Seq.isEmpty issueEvents |> not then
                     logger.LogInformation $"Sending issue {issue.Title}"
-                    do! telegram.sendIssue issue
+                    do! telegram.sendIssue issue issueEvents
         }
 
     override _.ExecuteAsync ct =
