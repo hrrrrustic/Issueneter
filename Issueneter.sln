@@ -2,6 +2,22 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.WebAPI", "Issueneter.WebAPI\Issueneter.WebAPI.fsproj", "{7F7851A3-E5C0-4159-975A-36B15A1A6E1F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Channels", "Channels", "{25B38373-6D53-4D1B-BCE6-9E0F8952FF76}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.TelegramChannel.Input", "Issueneter.TelegramChannel.Input\Issueneter.TelegramChannel.Input.fsproj", "{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.Requests", "Issueneter.Requests\Issueneter.Requests.fsproj", "{9FAE8A77-9B97-4171-BF75-C67F0552047B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.TelegramChannel.Output", "Issueneter.TelegramChannel.Output\Issueneter.TelegramChannel.Output.fsproj", "{B75999DD-7BAA-461F-A927-6DC8A7E092B2}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.ChannelsOutput.Api", "Issueneter.ChannelsOutput.Api\Issueneter.ChannelsOutput.Api.fsproj", "{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.Github", "Issueneter.Github\Issueneter.Github.fsproj", "{AB0AB9F4-9BCB-4AD3-918A-4A8DD8BB0997}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.Scanner", "Issueneter.Scanner\Issueneter.Scanner.fsproj", "{D1B63816-674E-4E38-B50D-A794021B458F}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Issueneter.Contracts", "Issueneter.Contracts\Issueneter.Contracts.fsproj", "{FC1FD785-1CEF-48F6-AEAF-40F1AC73FBF9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +28,38 @@ Global
 		{7F7851A3-E5C0-4159-975A-36B15A1A6E1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F7851A3-E5C0-4159-975A-36B15A1A6E1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F7851A3-E5C0-4159-975A-36B15A1A6E1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FAE8A77-9B97-4171-BF75-C67F0552047B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FAE8A77-9B97-4171-BF75-C67F0552047B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FAE8A77-9B97-4171-BF75-C67F0552047B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FAE8A77-9B97-4171-BF75-C67F0552047B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B75999DD-7BAA-461F-A927-6DC8A7E092B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B75999DD-7BAA-461F-A927-6DC8A7E092B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B75999DD-7BAA-461F-A927-6DC8A7E092B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B75999DD-7BAA-461F-A927-6DC8A7E092B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB0AB9F4-9BCB-4AD3-918A-4A8DD8BB0997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB0AB9F4-9BCB-4AD3-918A-4A8DD8BB0997}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB0AB9F4-9BCB-4AD3-918A-4A8DD8BB0997}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB0AB9F4-9BCB-4AD3-918A-4A8DD8BB0997}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1B63816-674E-4E38-B50D-A794021B458F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1B63816-674E-4E38-B50D-A794021B458F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1B63816-674E-4E38-B50D-A794021B458F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1B63816-674E-4E38-B50D-A794021B458F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC1FD785-1CEF-48F6-AEAF-40F1AC73FBF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC1FD785-1CEF-48F6-AEAF-40F1AC73FBF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC1FD785-1CEF-48F6-AEAF-40F1AC73FBF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC1FD785-1CEF-48F6-AEAF-40F1AC73FBF9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8B6EF85F-34FA-4FD3-966F-D5D953F72B5C} = {25B38373-6D53-4D1B-BCE6-9E0F8952FF76}
+		{B75999DD-7BAA-461F-A927-6DC8A7E092B2} = {25B38373-6D53-4D1B-BCE6-9E0F8952FF76}
+		{E9B52EBD-585B-4B6C-89C8-589D36E9A3C5} = {25B38373-6D53-4D1B-BCE6-9E0F8952FF76}
 	EndGlobalSection
 EndGlobal
