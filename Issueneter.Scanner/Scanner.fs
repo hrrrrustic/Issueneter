@@ -1,4 +1,4 @@
-﻿module Issueneter.Scanner
+﻿namespace Issueneter.Scanner
 
 open Issueneter.Contracts.Events
 open System

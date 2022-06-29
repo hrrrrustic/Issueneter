@@ -1,4 +1,4 @@
-﻿module Issueneter.Requests
+﻿module Issueneter.Requests.CreateScan
 
 open Issueneter.Requests.BaseTypes
 
